@@ -1,0 +1,67 @@
+\section{Background}
+
+\begin{frame}{Disclaimer!}
+    When I say vertex, point, or vector, I (most likely) am referring to the same thing.
+\end{frame}
+
+\subsection{Motivation}
+
+\begin{frame}{Why bother with ANNS Graphs?}
+    \begin{itemize}
+        \item High-dimensional vector data sets are becoming more popular (especially embedding real-world information into vectors)
+        \item One use case for these data sets is for similarity search, with real world applications such as
+            \begin{itemize}
+                \item Recommendation systems
+                \item Information retrieval systems
+            \end{itemize}
+        \item Tree-based and Hash-based methods are only useful with low-dimensional vector data due to \textit{the curse of dimensionality}
+        \item Graph-based data structures are the best performing so far
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Why bother with vertex removal?}
+    \begin{itemize}
+        \item Data can become outdated so there is no point to storing stale data
+        \item Existing data structures only support marking vertices as deleted 
+        \item Existing data structures also usually implements an upper limit to how many points can be stored in a graph
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \textbf{Goal:} Design a data structure that supports effecient vertex removal.
+\end{frame}
+
+\subsection{Definitions}
+
+\begin{frame}{\(k\)-Nearest Neighbor Search}
+\begin{definition}[\(k\)-Nearest Neighbor Search]
+    Given the point set \(\mathcal{P} \subset \mathbb{R}^d\), query point \(q \in \mathbb{R}^d\), and a distance function \(\delta\), we want to find a set \(\mathcal{K} \subseteq \mathcal{P}\) such that \(|\mathcal{K}| = k\) and
+    \[
+        \max_{p \in \mathcal{K}} \delta(p, q) \leq \min_{p \in \mathcal{P} \setminus \mathcal{K}} \delta(p, q)
+    \]
+    \end{definition}
+
+    Finding exact \(\mathcal{K}\) is expensive. So, we generally find the approximate \(\mathcal{K}\) instead.
+\end{frame}
+
+\begin{frame}{Approximation Quality}
+\begin{definition}[Recall]
+    Given the point set \(\mathcal{P} \subset \mathbb{R}^d\) and a query point \(q \in \mathbb{R}^d\), let \(\mathcal{K} \subset \mathcal{P}\) be \(q\)'s true \(k\) nearest neighbors in \(\mathcal{P}\) and \(\mathcal{N}\) be the output of an ANNS algorithm with \(|\mathcal{N}| = n\). We define \textit{\(k\)-recall at \(n\) of \(q\)} as
+    \[
+        \frac{|\mathcal{K} \cap \mathcal{N}|}{|\mathcal{K}|}
+    \]
+    This is denoted as \(k@n\) recall.
+\end{definition}
+\end{frame}
+
+\subsection{Existing Solutions}
+
+\begin{frame}{Existing Solutions}
+    There are a few approaches to solving \(k\)-ANNS:
+    \begin{itemize}
+        \item Naive linear search (very expensive)
+        \item Hash-based like LSH (does not work in high \(d\))
+        \item Tree-based like \(k\)D-trees (also does not work in high \(d\))
+        \item Graph-based (where the good stuff is)
+    \end{itemize}
+\end{frame}

@@ -1,0 +1,49 @@
+\section{Experiments}
+
+\begin{frame}{Which should we use as base?}
+    Want a data structure with efficient vertex removal along with good construction time and search? Build on top of existing ones!
+    \begin{itemize}
+        \item Both HNSW and DiskANN are very promising 
+        \item DiskANN seems to be better according to one paper
+        \item HNSW is still more popular than DiskANN
+    \end{itemize}
+\end{frame}
+
+\subsection{Experiment Setup}
+
+\begin{frame}{Implementations}
+    The implementations of the algorithms used are
+    \begin{itemize}
+        \item \texttt{hnswlib} (HNSW), implemented by the authors of HNSW
+        \item \texttt{faiss} (HNSW), implemented by Facebook AI
+        \item \texttt{diskannpy} (DiskANN), implemented by the authors of DiskANN
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Data Sets}
+    The data sets used for the experiments are
+    \begin{itemize}
+        \item SIFT1M, a million 128-dimension vectors
+        \item GIST1M, SIFT1M but 960-dimension
+    \end{itemize}
+\end{frame}
+
+\subsection{Results}
+
+\begin{frame}{SIFT1M Results}
+    
+\end{frame}
+
+\begin{frame}{GIFT1M Results}
+    
+\end{frame}
+
+\subsection{Conclusion}
+
+\begin{frame}{Which is better?}
+    Basically, \textit{it depends} on what your trade-offs are.
+    \begin{itemize}
+        \item HNSW takes up more memory
+        \item DiskANN requires significantly more build time to get high accuracy
+    \end{itemize}
+\end{frame}

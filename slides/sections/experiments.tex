@@ -1,28 +1,28 @@
 \section{Experiments}
 
-\begin{frame}{Approximation Quality}
-\begin{definition}[Recall]
-    Given the point set \(\mathcal{P} \subset \mathbb{R}^d\) and a query point \(q \in \mathbb{R}^d\), let \(\mathcal{K} \subset \mathcal{P}\) be \(q\)'s true \(k\) nearest neighbors in \(\mathcal{P}\) and \(\mathcal{N}\) be the output of an ANNS algorithm with \(|\mathcal{N}| = n\). We define \textit{\(k\)-recall at \(n\) of \(q\)} as
-    \[
-        \frac{|\mathcal{K} \cap \mathcal{N}|}{|\mathcal{K}|}
-    \]
-    This is denoted as \(k@n\) recall.
-\end{definition}
+\subsection{Quality Measures}
+
+\begin{frame}{Quality Measures}
+    \begin{itemize}
+        \item Build time (minutes)
+        \item Search latency (minutes)
+        \item Index size (GB)
+        \item Recall
+    \end{itemize}
 \end{frame}
 
-\begin{frame}{Which should we use as base?}
-    Want a data structure with efficient vertex removal along with good construction time and search? Build on top of existing ones!
-    \begin{itemize}
-        \item Both HNSW and DiskANN are very promising 
-        \item DiskANN seems to be better according to one paper
-        \item HNSW is still more popular than DiskANN
-    \end{itemize}
+\begin{frame}
+    \begin{definition}[Recall]
+        Let \(\mathcal{K}\) be groundtruth, \(\mathcal{N}\) be ANNS output. Recall is
+        \[
+            \frac{|\mathcal{K} \cap \mathcal{N}|}{|\mathcal{K}|}
+        \]
+    \end{definition}
 \end{frame}
 
 \subsection{Experiment Setup}
 
 \begin{frame}{Implementations}
-    The implementations of the algorithms used are
     \begin{itemize}
         \item \texttt{hnswlib} (HNSW), implemented by the authors of HNSW
         \item \texttt{faiss} (HNSW), implemented by Facebook AI
@@ -31,7 +31,6 @@
 \end{frame}
 
 \begin{frame}{Data Sets}
-    The data sets used for the experiments are
     \begin{itemize}
         \item SIFT1M, a million 128-dimension vectors
         \item GIST1M, SIFT1M but 960-dimension
@@ -41,19 +40,48 @@
 \subsection{Results}
 
 \begin{frame}{SIFT1M Results}
-    
+    \begin{table}[ht]
+        \begin{tabular}{l|rrr|rrrr}
+            \toprule
+            & \textbf{Params} & & & \textbf{Results} & & \\
+            \textbf{Impl} & Degree & Build & Search & Build & Search & Index & Recall \\
+            \midrule
+            \texttt{hnswlib} & 128 & 512 & - & 4.032 & 0.013 & 1.566 & 0.978 \\
+            \texttt{faiss} & 128 & 512 & 128 & 4.330 & 0.019 & 1.541 & 0.988 \\
+            \texttt{diskannpy} & 70 & 125 & 125 & 2.32 & 0.019 & 0.512 & 0.993 \\
+            \midrule
+            \texttt{hnswlib} & 128 & 256 & - & 2.238 & 0.013 & 1.572 & 0.969 \\
+            \texttt{faiss} & 128 & 256 & 200 & 2.582 & 0.028 & 1.541 & 0.994  \\
+            \texttt{diskannpy} & 128 & 256 & 200 & 6.794 & 0.035 & 0.512 & 0.999 \\
+            \bottomrule
+        \end{tabular}
+    \end{table}
 \end{frame}
 
 \begin{frame}{GIFT1M Results}
-    
+    \begin{table}[ht]
+        \begin{tabular}{l|rrr|rrrr}
+            \toprule
+            & \textbf{Params} & & & \textbf{Results} & & \\
+            \textbf{Impl} & Degree & Build & Search & Build & Search & Index & Recall \\
+            \midrule
+            % \texttt{hnswlib} & 128 & 256 & - & 13.851 & 0.009 & 4.904 & 0.849 \\
+            \texttt{faiss} & 128 & 256 & 128 & 14.826 & 0.016 & 4.869 & 0.932 \\
+            \texttt{diskannpy} & 64 & 128 & 125 & 14.233 & 0.112 & 3.840 & 0.917 \\
+            \midrule
+            \texttt{faiss} & 128 & 256 & 200 & 15.344 & 0.016 & 4.883 & 0.933 \\
+            \texttt{diskannpy} & 128 & 256 & 200 & 45.608 & 0.025 & 3.840 & 0.971 \\
+            \bottomrule
+        \end{tabular}
+    \end{table}
 \end{frame}
 
 \subsection{Conclusion}
 
 \begin{frame}{Which is better?}
-    Basically, \textit{it depends} on what your trade-offs are.
+    Trade-offs:
     \begin{itemize}
-        \item HNSW takes up more memory
-        \item DiskANN requires significantly more build time to get high accuracy
+        \item DiskANN dominates in easy data
+        \item HNSW more robust to hard data
     \end{itemize}
 \end{frame}

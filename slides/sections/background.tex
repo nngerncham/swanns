@@ -1,67 +1,120 @@
-\section{Background}
+\section{Motivation}
 
 \begin{frame}{Disclaimer!}
-    When I say vertex, point, or vector, I (most likely) am referring to the same thing.
+    \[
+        \text{Vertex} \iff \text{Point} \iff \text{Vector}
+    \]
 \end{frame}
 
-\subsection{Motivation}
+\subsection{Similarity Search and \(k\)-NNS}
 
-\begin{frame}{Why bother with ANNS Graphs?}
+\begin{frame}{Similarity Search}
     \begin{itemize}
-        \item High-dimensional vector data sets are becoming more popular (especially embedding real-world information into vectors)
-        \item One use case for these data sets is for similarity search, with real world applications such as
-            \begin{itemize}
-                \item Recommendation systems
-                \item Information retrieval systems
-            \end{itemize}
-        \item Tree-based and Hash-based methods are only useful with low-dimensional vector data due to \textit{the curse of dimensionality}
-        \item Graph-based data structures are the best performing so far
+        \item Finding similar \textit{objects}
+        \item In CS: Recommendation systems
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Why bother with vertex removal?}
-    \begin{itemize}
-        \item Data can become outdated so there is no point to storing stale data
-        \item Existing data structures only support marking vertices as deleted 
-        \item Existing data structures also usually implements an upper limit to how many points can be stored in a graph
-    \end{itemize}
+\begin{frame}{Similarity Search (in Recommendation System)}
+    \begin{figure}[ht]
+        \centering
+        \hfill
+        \begin{subfigure}{0.33\textwidth}
+            \centering
+            \includegraphics[height=0.69\textheight]{images/inside-the-mind-of-a-cat.jpg}
+
+            {Just watched and loved}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.27\textwidth}
+            \centering
+            \includegraphics[height=0.6\textheight]{images/cat-people.jpg}
+
+            {Choice A}
+        \end{subfigure}
+        \begin{subfigure}{0.27\textwidth}
+            \centering
+            \includegraphics[height=0.6\textheight]{images/jujutsu-kaisen.jpg}
+
+            {Choice B}
+        \end{subfigure}
+        \hfill
+    \end{figure}
 \end{frame}
 
-\begin{frame}
-    \textbf{Goal:} Design a data structure that supports effecient vertex removal.
+\begin{frame}{Similarity Search (in Math)}
+    \begin{figure}[ht]
+        \centering
+        \caption*{Trade offer}
+        \hfill
+        \begin{subfigure}{0.45\textwidth}
+            \caption*{You receive}
+            \includegraphics[width=\textwidth]{images/sim-search-init.png}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.45\textwidth}
+            \caption*{I receive}
+            \includegraphics[width=\textwidth]{images/sim-search-knn.png}
+        \end{subfigure}
+        \hfill
+    \end{figure}
 \end{frame}
-
-\subsection{Definitions}
 
 \begin{frame}{\(k\)-Nearest Neighbor Search}
 \begin{definition}[\(k\)-Nearest Neighbor Search]
-    Given the point set \(\mathcal{P} \subset \mathbb{R}^d\), query point \(q \in \mathbb{R}^d\), and a distance function \(\delta\), we want to find a set \(\mathcal{K} \subseteq \mathcal{P}\) such that \(|\mathcal{K}| = k\) and
+    Given point set \(\mathcal{P} \subset \mathbb{R}^d\), query point \(q \in \mathbb{R}^d\), and a distance function \(\delta\), we want to find a set \(\mathcal{K} \subseteq \mathcal{P}\) such that \(|\mathcal{K}| = k\) and
     \[
         \max_{p \in \mathcal{K}} \delta(p, q) \leq \min_{p \in \mathcal{P} \setminus \mathcal{K}} \delta(p, q)
     \]
     \end{definition}
 
-    Finding exact \(\mathcal{K}\) is expensive. So, we generally find the approximate \(\mathcal{K}\) instead.
+    \hfill
+    \begin{figure}[ht]
+        \centering
+        \begin{subfigure}{0.24\textwidth}
+            \includegraphics[width=\textwidth]{images/sim-search-P}
+            \caption*{\(\mathcal{P}\)}
+        \end{subfigure}
+    \hfill
+        \begin{subfigure}{0.24\textwidth}
+            \includegraphics[width=\textwidth]{images/sim-search-q}
+            \caption*{\(q\)}
+        \end{subfigure}
+    \hfill
+        \begin{subfigure}{0.24\textwidth}
+            \includegraphics[width=\textwidth]{images/sim-search-knn}
+            \caption*{\(\mathcal{K}\)}
+        \end{subfigure}
+    \hfill
+        \begin{subfigure}{0.24\textwidth}
+            \includegraphics[width=\textwidth]{images/sim-search-Pminus}
+            \caption*{\(\mathcal{P} \setminus \mathcal{K}\)}
+        \end{subfigure}
+    \end{figure}
+    \hfill
 \end{frame}
 
-\begin{frame}{Approximation Quality}
-\begin{definition}[Recall]
-    Given the point set \(\mathcal{P} \subset \mathbb{R}^d\) and a query point \(q \in \mathbb{R}^d\), let \(\mathcal{K} \subset \mathcal{P}\) be \(q\)'s true \(k\) nearest neighbors in \(\mathcal{P}\) and \(\mathcal{N}\) be the output of an ANNS algorithm with \(|\mathcal{N}| = n\). We define \textit{\(k\)-recall at \(n\) of \(q\)} as
-    \[
-        \frac{|\mathcal{K} \cap \mathcal{N}|}{|\mathcal{K}|}
-    \]
-    This is denoted as \(k@n\) recall.
-\end{definition}
-\end{frame}
+\subsection{ANNS Graphs}
 
-\subsection{Existing Solutions}
-
-\begin{frame}{Existing Solutions}
-    There are a few approaches to solving \(k\)-ANNS:
+\begin{frame}{Why graph?}
     \begin{itemize}
-        \item Naive linear search (very expensive)
-        \item Hash-based like LSH (does not work in high \(d\))
-        \item Tree-based like \(k\)D-trees (also does not work in high \(d\))
-        \item Graph-based (where the good stuff is)
+        \item Big, high-dimensional data sets
+        \item Exact solutions are expensive
+        \item \{Tree, Hash\}-based solutions breaks down
     \end{itemize}
+\end{frame}
+
+\begin{frame}{Why remove?}
+    \begin{itemize}
+        \item Data becomes stale
+        \item Challenges with removals:
+            \begin{itemize}
+                \item Disconnection
+                \item Quality/Performance deprecation
+            \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \textbf{Goal:} Design a data structure that supports efficient vertex removal.
 \end{frame}

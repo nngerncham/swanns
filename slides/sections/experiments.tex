@@ -1,5 +1,15 @@
 \section{Experiments}
 
+\begin{frame}{Approximation Quality}
+\begin{definition}[Recall]
+    Given the point set \(\mathcal{P} \subset \mathbb{R}^d\) and a query point \(q \in \mathbb{R}^d\), let \(\mathcal{K} \subset \mathcal{P}\) be \(q\)'s true \(k\) nearest neighbors in \(\mathcal{P}\) and \(\mathcal{N}\) be the output of an ANNS algorithm with \(|\mathcal{N}| = n\). We define \textit{\(k\)-recall at \(n\) of \(q\)} as
+    \[
+        \frac{|\mathcal{K} \cap \mathcal{N}|}{|\mathcal{K}|}
+    \]
+    This is denoted as \(k@n\) recall.
+\end{definition}
+\end{frame}
+
 \begin{frame}{Which should we use as base?}
     Want a data structure with efficient vertex removal along with good construction time and search? Build on top of existing ones!
     \begin{itemize}

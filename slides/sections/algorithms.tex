@@ -1,34 +1,91 @@
 \section{Algorithms}
 
 \begin{frame}{Graph-based ANNS Algorithms}
-    Usually, graph-based solutions have 2 main phases:
+    Two phases:
     \begin{enumerate}
-        \item Index construction (building the graph incrementally)
-        \item Search (done greedily, same for every graph)
+        \item Index construction
+        \item (Greedy) Search 
     \end{enumerate}
 \end{frame}
 
-\begin{frame}
-\begin{algorithm}[H]
-    \caption{GreedySearch Algorithm}\label{alg:greedy-search}
-    \begin{algorithmic}[1]
-        \Function{GreedySearch}{\(G, s, q, k, L\){}}
-            \State{\(\mathcal{L} \gets \left\{s\right\}\); \(\mathcal{V} \gets \emptyset\)} \Comment{candidates \(\mathcal{L}\), visited \(\mathcal{V}\)}
-            \While{\(\mathcal{L} \setminus \mathcal{V} \neq \emptyset\)}
-                \State{\(p^* \gets \arg\min_{p \in \mathcal{L} \setminus \mathcal{V}} \delta(p, q)\)}
-                \State{\(\mathcal{L} \gets \mathcal{L} \cup N_{\text{out}}(p^*)\)}
-                \State{\(\mathcal{V} \gets \mathcal{V} \cup \left\{p^*\right\}\)}
+\subsection{Search}
+
+\begin{frame}{\textsc{GreedySearch}}
+    \begin{figure}[h]
+        \centering
+        \hfill
+        \begin{subfigure}{0.31\textwidth}
+            \includegraphics[width=\textwidth]{images/greedy-search-begin}
+            \caption{Initialization}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.31\textwidth}
+            \includegraphics[width=\textwidth]{images/greedy-search-1}
+            \caption{Iteration 1}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.31\textwidth}
+            \includegraphics[width=\textwidth]{images/greedy-search-2}
+            \caption{Iteration 2}
+        \end{subfigure}
+        \hfill
+    \end{figure}
+\end{frame}
+
+\begin{frame}{\textsc{GreedySearch}}
+    \begin{figure}[h]
+        \centering
+        \hfill
+        \begin{subfigure}{0.31\textwidth}
+            \includegraphics[width=\textwidth]{images/greedy-search-3}
+            \caption{Iteration 3}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.31\textwidth}
+            \includegraphics[width=\textwidth]{images/greedy-search-4}
+            \caption{Iteration 4}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.31\textwidth}
+            \includegraphics[width=\textwidth]{images/greedy-search-final}
+            \caption{Returning values}
+        \end{subfigure}
+        \hfill
+    \end{figure}
+\end{frame}
+
+\begin{frame}{\textsc{GreedySearch} Algorithm}
+    \begin{algorithm}[H]
+        \caption{\textsc{GreedySearch}(Query \(q\), Starting \(s\), Max queue size \(L\))}\label{alg:greedy-search}
+        \begin{algorithmic}[1]
+            % \Function{GreedySearch}{\(G, s, q, k, L\){}}
+            %     \State{\(\mathcal{L} \gets \left\{s\right\}\); \(\mathcal{V} \gets \emptyset\)} \Comment{candidates \(\mathcal{L}\), visited \(\mathcal{V}\)}
+            %     \While{\(\mathcal{L} \setminus \mathcal{V} \neq \emptyset\)}
+            %         \State{\(p^* \gets \arg\min_{p \in \mathcal{L} \setminus \mathcal{V}} \delta(p, q)\)}
+            %         \State{\(\mathcal{L} \gets \mathcal{L} \cup N_{\text{out}}(p^*)\)}
+            %         \State{\(\mathcal{V} \gets \mathcal{V} \cup \left\{p^*\right\}\)}
+            %         \If{\(|\mathcal{L}| > L\)}
+            %             \State{\(\mathcal{L} \gets \textsc{GetClosest}(\mathcal{L}, L)\)}
+            %         \EndIf
+            %     \EndWhile
+            %     \State{\Return{\(\mathcal{L}, \mathcal{V}\)}}
+            % \EndFunction
+            \State{Init \(\mathcal{L}\) as work queue with \(s\)}
+            \State{Init \(\mathcal{V}\) to store visited vertices}
+            \While{\(\mathcal{L}\) contains unvisited vertices}
+                \State{Let \(p^*\) be point closest to \(q\) in \(\mathcal{L}\)}
+                \State{Add \(N(p^*)\) to \(\mathcal{L}\)}
+                \State{Mark \(p^*\) as visited}
                 \If{\(|\mathcal{L}| > L\)}
-                    \State{\(\mathcal{L} \gets \textsc{GetClosest}(\mathcal{L}, L)\)}
+                    \State{Pick \(L\) points closest to \(q\) in \(\mathcal{L}\) to keep}
                 \EndIf
             \EndWhile
-            \State{\Return{\(\mathcal{L}, \mathcal{V}\)}}
-        \EndFunction
-    \end{algorithmic}
-\end{algorithm}
-
-\textbf{Inputs:} Graph \(G\), Starting point \(s\), Query point \(q\), Number of neighbors \(k\), Candidate set size \(S\)
+            \State{\Return{\([\mathcal{L}, \mathcal{V}]\)}}
+        \end{algorithmic}
+    \end{algorithm}
 \end{frame}
+
+\subsection{Index Construction}
 
 \begin{frame}{Index Construction}
     In the ANNScaling paper, there are two outstanding performers:

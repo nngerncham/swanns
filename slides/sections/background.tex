@@ -11,7 +11,7 @@
 \begin{frame}{Similarity Search}
     \begin{itemize}
         \item Finding similar \textit{objects}
-        \item In CS: Recommendation systems
+        \item In CS: Recommendation systems, Information retrieval, Search engine
     \end{itemize}
 \end{frame}
 
@@ -42,21 +42,28 @@
     \end{figure}
 \end{frame}
 
-\begin{frame}{Similarity Search (in Math)}
+\begin{frame}{Similarity Search (in Math) --- \(k\)-Nearest Neighbor Search}
     \begin{figure}[ht]
         \centering
-        \caption*{Trade offer}
+        \caption*{\textbf{Trade offer}}
         \hfill
-        \begin{subfigure}{0.45\textwidth}
+        \begin{subfigure}{0.42\textwidth}
             \caption*{You receive}
             \includegraphics[width=\textwidth]{images/sim-search-init.png}
         \end{subfigure}
         \hfill
-        \begin{subfigure}{0.45\textwidth}
+        \begin{subfigure}{0.42\textwidth}
             \caption*{I receive}
             \includegraphics[width=\textwidth]{images/sim-search-knn.png}
         \end{subfigure}
         \hfill
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Similarity Search (in Math) --- \(k\)-Nearest Neighbor Search}
+    \begin{figure}[ht]
+        \centering
+        \includegraphics[width=0.5\textwidth]{images/sim-search-final.png}
     \end{figure}
 \end{frame}
 
@@ -101,12 +108,17 @@
         \item Big, high-dimensional data sets
         \item Exact solutions are expensive
         \item \{Tree, Hash\}-based solutions breaks down
+            \begin{itemize}
+                \item Curse of dimensionality
+            \end{itemize}
+        \item Graphs work better
     \end{itemize}
 \end{frame}
 
 \begin{frame}{Why remove?}
     \begin{itemize}
         \item Data becomes stale
+        \item Existing algorithms don't do removal
         \item Challenges with removals:
             \begin{itemize}
                 \item Disconnection
@@ -116,5 +128,6 @@
 \end{frame}
 
 \begin{frame}
+    \centering
     \textbf{Goal:} Design a data structure that supports efficient vertex removal.
 \end{frame}

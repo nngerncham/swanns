@@ -1,0 +1,236 @@
+\chapter{Algorithms}
+
+{Graph-based ANNS Algorithms}
+    Two phases:
+    \begin{enumerate}
+        \item Index construction
+        \item (Greedy) Search 
+    \end{enumerate}
+
+
+\section{Search}
+
+{Search Algorithm}
+    \begin{algorithm}[H]
+        \caption{\textsc{GreedySearch}(Query \(q\), Starting \(s\), Max queue size \(L\))}\label{alg:greedy-search}
+        \begin{algorithmic}[1]
+            % \Function{GreedySearch}{\(G, s, q, k, L\){}}
+            %     \State{\(\mathcal{L} \gets \left\{s\right\}\); \(\mathcal{V} \gets \emptyset\)} \Comment{candidates \(\mathcal{L}\), visited \(\mathcal{V}\)}
+            %     \While{\(\mathcal{L} \setminus \mathcal{V} \neq \emptyset\)}
+            %         \State{\(p^* \gets \arg\min_{p \in \mathcal{L} \setminus \mathcal{V}} \delta(p, q)\)}
+            %         \State{\(\mathcal{L} \gets \mathcal{L} \cup N_{\text{out}}(p^*)\)}
+            %         \State{\(\mathcal{V} \gets \mathcal{V} \cup \left\{p^*\right\}\)}
+            %         \If{\(|\mathcal{L}| > L\)}
+            %             \State{\(\mathcal{L} \gets \textsc{GetClosest}(\mathcal{L}, L)\)}
+            %         \EndIf
+            %     \EndWhile
+            %     \State{\Return{\(\mathcal{L}, \mathcal{V}\)}}
+            % \EndFunction
+            \State{Init \(\mathcal{L}\) as work queue with \(s\)}
+            \State{Init \(\mathcal{V}\) to store visited vertices}
+            \While{\(\mathcal{L}\) contains unvisited vertices}
+                \State{Let \(p^*\) be point closest to \(q\) in \(\mathcal{L}\)}
+                \State{Add \(N(p^*)\) to \(\mathcal{L}\)}
+                \State{Mark \(p^*\) as visited}
+                \If{\(|\mathcal{L}| > L\)}
+                    \State{Pick \(L\) points closest to \(q\) in \(\mathcal{L}\) to keep}
+                \EndIf
+            \EndWhile
+            \State{\Return{\([\mathcal{L}, \mathcal{V}]\)}}
+        \end{algorithmic}
+    \end{algorithm}
+
+
+{Search}
+    \begin{figure}[h]
+        \centering
+        \hfill
+        \begin{subfigure}{0.31\textwidth}
+            \includegraphics[width=\textwidth]{images/greedy-search-begin}
+            \caption{Initialization}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.31\textwidth}
+            \includegraphics[width=\textwidth]{images/greedy-search-1}
+            \caption{Iteration 1}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.31\textwidth}
+            \includegraphics[width=\textwidth]{images/greedy-search-2}
+            \caption{Iteration 2}
+        \end{subfigure}
+        \hfill
+    \end{figure}
+
+
+{Search}
+    \begin{figure}[h]
+        \centering
+        \hfill
+        \begin{subfigure}{0.31\textwidth}
+            \includegraphics[width=\textwidth]{images/greedy-search-3}
+            \caption{Iteration 3}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.31\textwidth}
+            \includegraphics[width=\textwidth]{images/greedy-search-4}
+            \caption{Iteration 4}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.31\textwidth}
+            \includegraphics[width=\textwidth]{images/greedy-search-final}
+            \caption{Returning values}
+        \end{subfigure}
+        \hfill
+    \end{figure}
+
+
+\section{Index Construction}
+
+{Index Construction Algorithm}
+    \begin{algorithm}[H]
+        \caption{\textsc{BuildIndex}(Data \(\mathcal{P}\), Start point \(s\), Beam width \(L\), Degree bound \(M\))}
+        \begin{algorithmic}[1]
+            \For{\(p \in \mathcal{P}\)}
+                \State{Add \(p\) to graph}
+                \State{\([\mathcal{L}, \mathcal{V}] \gets \textsc{GreedySearch}(p, s, L, 1)\)} \Comment{Searches for \(p\) in existing graph}
+                \State{Cut out repetitive edges in \(\mathcal{V}\) and assign as neighbors of \(p\)} \Comment{Pruning}
+            \EndFor
+        \end{algorithmic}
+    \end{algorithm}
+
+
+{Index Construction}
+    \begin{figure}[ht]
+        \centering
+        \hfill
+        \begin{subfigure}{0.49\textwidth}
+            \centering
+            \includegraphics[height=0.6\textheight]{images/hnsw}
+            \caption{Hierarchical Navigable Small World (HNSW) graph}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.49\textwidth}
+            \centering
+            \includegraphics[height=0.6\textheight]{images/diskann}
+            \caption{DiskANN graph}
+        \end{subfigure}
+        \hfill
+        \caption{Existing, best-performing algorithms}
+    \end{figure}
+
+
+\section{HNSW vs. DiskANN}
+
+{HNSW vs. DiskANN}
+    Similarities:
+    \begin{itemize}
+        \item Long edges and short edges
+    \end{itemize}
+
+    Differences:
+    \begin{itemize}
+        \item Multi-layer vs. 1-layer
+        \item Undirected vs. directed graph
+        \item Pruning criteria
+    \end{itemize}
+
+
+{Why care about HNSW and DiskANN?}
+    \begin{itemize}
+        \item Removal shouldn't degrade quality
+        \item HNSW and DiskANN are promising 
+    \end{itemize}
+
+
+\section{HNSW}
+
+
+\begin{algorithm}[H]
+    \caption{SelectNeighbors Algorithm}\label{alg:select-nbrs}
+    \begin{algorithmic}[1]
+        \Function{SelectNeighbors}{\(G, q, \mathcal{C}, M\){}}
+            \State{\(\mathcal{R} \gets \emptyset\); \(\mathcal{W} \gets \mathcal{C}\)} \Comment{keepers \(\mathcal{R}\), candidates \(\mathcal{W}\)}
+            \While{\(|\mathcal{W}| > 0\) and \(|\mathcal{R}| < M\)}
+                \State{\(p^* \gets \arg\min_{p \in \mathcal{W}} \delta(p, q)\)}
+                \If{\(\delta(p^*, q) < \min_{p' \in \mathcal{R}} \delta(p', q)\)}
+                    \State{\(\mathcal{R} \gets \mathcal{R} \cup \left\{e\right\}\)}
+                \EndIf
+            \EndWhile
+            \State{\Return{\(\mathcal{R}\)}}
+        \EndFunction
+    \end{algorithmic}
+\end{algorithm}
+
+\textbf{Inputs:} Graph \(G\), Query \(q\), Candidates \(\mathcal{C}\), Max degree \(M\)
+
+
+
+\begin{algorithm}[H]
+    \caption{HNSW Algorithm}\label{alg:hnsw}
+    \begin{algorithmic}[1]
+        \Function{HNSW}{\(\mathcal{P}, C, M, m_L\)}
+            \State{\(G \gets\) empty graph}
+            \For{\(p \in \mathcal{P}\)}
+                \State{\(\mathcal{W} \gets \emptyset\), \(ep \gets s\)}
+            \EndFor
+            \State{\Return{\(G\)}}
+        \EndFunction
+    \end{algorithmic}
+\end{algorithm}
+
+\textbf{Inputs:} Point set \(\mathcal{P}\)
+
+
+\section{DiskANN}
+
+
+\begin{algorithm}[H]
+    \caption{RobustPrune Algorithm}\label{alg:robust-prune}
+    \begin{algorithmic}[1]
+        \Procedure{RobustPrune}{\(G, p, \mathcal{V}, \alpha, M\){}}
+            \State{\(\mathcal{V} \gets \mathcal{V} \cup N_{\text{out}}(p) \setminus \left\{p\right\};N_\text{out}(p) \gets \emptyset\)}
+            \While{\(\mathcal{V} \neq \emptyset\)}
+                \State{\(p^* \gets \arg\min_{p \in \mathcal{V}} \delta(p, q)\)}
+                \State{\(N_\text{out}(p) \gets N_\text{out}(p) \cup \left\{p^*\right\}\)}
+                \If{\(|N_\text{out}(p) = M\)}
+                    \State{break}
+                \EndIf
+                \For{\(p' \in \mathcal{V}\)}
+                    \If{\(\alpha \cdot \delta(p^*, p') \leq \delta(p, p')\)}
+                        \State{\(\mathcal{V} \gets \mathcal{V} \setminus \left\{p'\right\}\)}
+                    \EndIf
+                \EndFor
+            \EndWhile
+        \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+\textbf{Inputs:} Graph \(G\), Starting point \(p\), Candidate set \(\mathcal{V}\), Distance scaler \(\alpha\), Max degree \(M\)
+
+
+
+\begin{algorithm}[H]
+    \caption{Vamana Algorithm}\label{alg:vamana}
+    \begin{algorithmic}[1]
+        \Function{Vamana}{\(\mathcal{P}, \alpha, C, M\){}}
+            \State{Initialize \(G\) as random directed graph with max degree \(M\)}
+            \State{\(s \gets \textsc{Medoid}(\mathcal{P})\); \(n \gets |\mathcal{P}|\)}
+            \For{\(p \in \mathcal{P}\)}
+                \State{\(\mathcal{L}, \mathcal{V} \gets \textsc{GreedySearch}(s, p, 1, C)\)}
+                \State{\(\textsc{RobustPrune}(p, \mathcal{V}, \alpha, M)\)}
+                \For{\(p' \in N_\text{out}(p)\)}
+                    \If{\(|N_\text{out}(p') \cup \left\{p'\right\}| > M\)}
+                        \State{\(\textsc{RobustPrune}(p', N_\text{out}(p')\cup\left\{p'\right\}, \alpha, M)\)}
+                    \Else
+                        \State{\(N_\text{out}(p') \gets N_\text{out}(p') \cup \left\{p'\right\}\)}
+                    \EndIf
+                \EndFor
+            \EndFor
+            \State{\Return{\(G\)}}
+        \EndFunction
+    \end{algorithmic}
+\end{algorithm}
+
+\textbf{Inputs:} Point set \(\mathcal{P}\), Dist. scaler \(\alpha\), Candidate size \(C\), Max degree \(M\)
+

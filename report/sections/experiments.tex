@@ -1,0 +1,88 @@
+\chapter{Experiments}
+
+\section{Quality Measures}
+
+{Quality Measures}
+\begin{itemize}
+    \item Build time (minutes)
+    \item Search latency (minutes)
+    \item Index size (GB)
+    \item Recall
+\end{itemize}
+
+
+\begin{definition}[Recall]
+    Let \(\mathcal{K}\) be groundtruth, \(\mathcal{N}\) be ANNS output. Recall is
+    \[
+        \frac{|\mathcal{K} \cap \mathcal{N}|}{|\mathcal{K}|}
+    \]
+\end{definition}
+% 
+
+\section{Experiment Setup}
+
+Implementations
+\begin{itemize}
+    % \item \texttt{hnswlib} (HNSW), implemented by the authors of HNSW
+    \item \texttt{faiss} (HNSW) \cite{faiss-github}, implemented by Facebook AI
+    \item \texttt{diskannpy} (DiskANN), implemented by the authors of DiskANN
+\end{itemize}
+
+Data sets
+\begin{itemize}
+    \item SIFT1M, a million 128-dimension vectors
+    \item GIST1M, SIFT1M but 960-dimension
+\end{itemize}
+
+
+% {Data Sets}
+% 
+
+\section{Results}
+
+{SIFT1M Results}
+\begin{table}[ht]
+    \begin{tabular}{l|rrr|rrrr}
+        \toprule
+        & \textbf{Params} & & & \textbf{Results} & & \\
+        \textbf{Impl} & Degree & Build & Search & Build & Search & Index & Recall \\
+        \midrule
+        % \texttt{hnswlib} & 128 & 512 & - & 4.032 & 0.013 & 1.566 & 0.978 \\
+        \texttt{faiss} & 128 & 512 & 128 & 4.330 & 0.019 & 1.541 & 0.988 \\
+        \texttt{diskannpy} & 70 & 125 & 125 & 2.32 & 0.019 & 0.512 & 0.993 \\
+        \midrule
+        % \texttt{hnswlib} & 128 & 256 & - & 2.238 & 0.013 & 1.572 & 0.969 \\
+        \texttt{faiss} & 128 & 256 & 200 & 2.582 & 0.028 & 1.541 & 0.994  \\
+        \texttt{diskannpy} & 128 & 256 & 200 & 6.794 & 0.035 & 0.512 & 0.999 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+
+{GIFT1M Results}
+\begin{table}[ht]
+    \begin{tabular}{l|rrr|rrrr}
+        \toprule
+        & \textbf{Params} & & & \textbf{Results} & & \\
+        \textbf{Impl} & Degree & Build & Search & Build & Search & Index & Recall \\
+        \midrule
+        % \texttt{hnswlib} & 128 & 256 & - & 13.851 & 0.009 & 4.904 & 0.849 \\
+        \texttt{faiss} & 128 & 256 & 128 & 14.826 & 0.016 & 4.869 & 0.932 \\
+        \texttt{diskannpy} & 64 & 128 & 125 & 14.233 & 0.112 & 3.840 & 0.917 \\
+        \midrule
+        \texttt{faiss} & 128 & 256 & 200 & 15.344 & 0.016 & 4.883 & 0.933 \\
+        \texttt{diskannpy} & 128 & 256 & 200 & 45.608 & 0.025 & 3.840 & 0.971 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+
+\section{Conclusion}
+
+{Which is better?}
+Trade-offs:
+\begin{itemize}
+    \item DiskANN dominates in easy data
+    \item HNSW more robust to hard data
+\end{itemize}
+

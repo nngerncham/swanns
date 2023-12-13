@@ -1,47 +1,47 @@
 \chapter{Experiments}
 
-\section{Quality Measures}
+Although \cite{annscaling} seems to suggest that DiskANN is the better performing algorithm compared to HNSW, HNSW seems to be more popular and shows up in more discussions and studies. For instance, in a study designing a distributed system for ANNS purposes \cite{lanns} where it constructs an ANNS graph at its leaves, the authors decided to use HNSW to construct the index instead of DiskANN despite papers proposing both having already been published. So, we believe that there must be more to the comparison between both. In order to decide on which we should build our removal algorithms upon, we decided to run an experiment to find the better one among the two.
 
-{Quality Measures}
+\section{Experiment Setup}
+
+\subsection{Quality Measures}
+
+In order to quantify the quality of each algorithm, we will be using the following values.
 \begin{itemize}
     \item Build time (minutes)
     \item Search latency (minutes)
     \item Index size (GB)
-    \item Recall
+    \item Search accuracy, measured by recall (defined below)
 \end{itemize}
 
-
 \begin{definition}[Recall]
-    Let \(\mathcal{K}\) be groundtruth, \(\mathcal{N}\) be ANNS output. Recall is
+    Given the point set \(\mathcal{P} \subset \mathbb{R}^d\) and a query point \(q \in \mathbb{R}^d\), let \(\mathcal{K} \subset \mathcal{P}\) be \(q\)'s true \(k\) nearest neighbors in \(\mathcal{P}\) and \(\mathcal{N}\) be the output of an ANNS algorithm with \(|\mathcal{N}| = n\). We define \textit{\(k\)-recall at \(n\) of \(q\)} as
     \[
         \frac{|\mathcal{K} \cap \mathcal{N}|}{|\mathcal{K}|}
     \]
+    This is denoted as \(k@n\) recall.
 \end{definition}
-% 
+ 
+\subsection{Implementations}
 
-\section{Experiment Setup}
-
-Implementations
+The implementations used for the experiments are
 \begin{itemize}
-    % \item \texttt{hnswlib} (HNSW), implemented by the authors of HNSW
-    \item \texttt{faiss} (HNSW) \cite{faiss-github}, implemented by Facebook AI
-    \item \texttt{diskannpy} (DiskANN), implemented by the authors of DiskANN
+    \item \texttt{faiss} \cite{faiss-github} which is an implementation of HNSW done by Facebook AI
+    \item \texttt{diskannpy} \cite{diskann-github} which is an implementation of DiskANN done by the authors of the DiskANN paper from Microsoft
 \end{itemize}
 
-Data sets
-\begin{itemize}
-    \item SIFT1M, a million 128-dimension vectors
-    \item GIST1M, SIFT1M but 960-dimension
-\end{itemize}
+\subsection{Data sets}
 
-
-% {Data Sets}
-% 
+The data sets used in the experiments are the SIFT1M and GIST1M \cite{sift}, data sets of one million 128- and 960-dimension vectors, respectively.
 
 \section{Results}
 
-{SIFT1M Results}
+\subsection{SIFT1M Results}
+
 \begin{table}[ht]
+    \centering
+    \caption{SIFT1M Results}
+    \label{tbl:sift1m-results}
     \begin{tabular}{l|rrr|rrrr}
         \toprule
         & \textbf{Params} & & & \textbf{Results} & & \\
@@ -51,7 +51,6 @@ Data sets
         \texttt{faiss} & 128 & 512 & 128 & 4.330 & 0.019 & 1.541 & 0.988 \\
         \texttt{diskannpy} & 70 & 125 & 125 & 2.32 & 0.019 & 0.512 & 0.993 \\
         \midrule
-        % \texttt{hnswlib} & 128 & 256 & - & 2.238 & 0.013 & 1.572 & 0.969 \\
         \texttt{faiss} & 128 & 256 & 200 & 2.582 & 0.028 & 1.541 & 0.994  \\
         \texttt{diskannpy} & 128 & 256 & 200 & 6.794 & 0.035 & 0.512 & 0.999 \\
         \bottomrule
@@ -59,14 +58,17 @@ Data sets
 \end{table}
 
 
-{GIFT1M Results}
+\subsection{GIFT1M Results}
+
 \begin{table}[ht]
+    \centering
+    \caption{GIST1M Results}
+    \label{tbl:gist1m-results}
     \begin{tabular}{l|rrr|rrrr}
         \toprule
         & \textbf{Params} & & & \textbf{Results} & & \\
         \textbf{Impl} & Degree & Build & Search & Build & Search & Index & Recall \\
         \midrule
-        % \texttt{hnswlib} & 128 & 256 & - & 13.851 & 0.009 & 4.904 & 0.849 \\
         \texttt{faiss} & 128 & 256 & 128 & 14.826 & 0.016 & 4.869 & 0.932 \\
         \texttt{diskannpy} & 64 & 128 & 125 & 14.233 & 0.112 & 3.840 & 0.917 \\
         \midrule
@@ -79,10 +81,8 @@ Data sets
 
 \section{Conclusion}
 
-{Which is better?}
-Trade-offs:
-\begin{itemize}
-    \item DiskANN dominates in easy data
-    \item HNSW more robust to hard data
-\end{itemize}
+In an easy data set like SIFT1M, we can see in Table \ref{tbl:sift1m-results} that DiskANN essentially outperforms HNSW in every way, achieving better recall, build time, and the amount of memory taken up by the graph. Interestingly, while still outperforming HNSW in other ways, DiskANN takes significantly longer to construct the graph when the parameters used are the same as HNSW.
 
+However, on a more difficult data set like GIST1M, while DiskANN still has smaller graph size and slightly faster graph construction time, it clearly suffers from worse search latency and recall compared to HNSW as shown in Table \ref{tbl:gist1m-results}. If we are willing to sacrifice build time, DiskANN is able to achieve higher recall overall but also triples the build time.
+
+In short, the decision between which is better depends on which trade-off the we are willing to make. While DiskANN is able to achieve better accuracy in an easier data set, HNSW is more robust when the data set is more difficult to work with.

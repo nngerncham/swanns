@@ -13,8 +13,8 @@
 }
 
 @article{hnsw,
-    title = {Efficient and robust approximate nearest neighbor search using
-             hierarchical navigable small world graphs},
+    title = {Efficient and robust approximate nearest neighbor search using {
+             Hierarchical Navigable Small World Graphs}},
     author = {Malkov, Yu A and Yashunin, Dmitry A},
     journal = {IEEE transactions on pattern analysis and machine intelligence},
     volume = {42},
@@ -23,6 +23,7 @@
     year = {2018},
     publisher = {IEEE},
 }
+
 @inproceedings{diskann-paper,
     author = {Jayaram Subramanya, Suhas and Devvrit, Fnu and Simhadri, Harsha
               Vardhan and Krishnawamy, Ravishankar and Kadekodi, Rohan},
@@ -31,15 +32,14 @@
               \textquotesingle Alch\'{e}-Buc and E. Fox and R. Garnett},
     pages = {},
     publisher = {Curran Associates, Inc.},
-    title = {DiskANN: Fast Accurate Billion-point Nearest Neighbor Search on a
-             Single Node},
+    title = {{DiskANN: Fast Accurate Billion-point Nearest Neighbor Search on a
+             Single Node}},
     url = {
            https://proceedings.neurips.cc/paper_files/paper/2019/file/09853c7fb1d3f8ee67a61b6bf4a7f8e6-Paper.pdf
            },
     volume = {32},
     year = {2019},
 }
-
 
 @misc{diskann-github,
     author = {Simhadri, Harsha Vardhan and Krishnaswamy, Ravishankar and
@@ -48,11 +48,11 @@
               Gollapudi, Siddarth and Sivashankar, Varun and Karia, Neel and
               Singh, Aditi and Jaiswal, Shikhar and Mahapatro, Neelam and Adams,
               Philip and Tower, Bryan and Patel, Yash},
-},
-   title = {{DiskANN: Graph-structured Indices for Scalable, Fast, Fresh and Filtered Approximate Nearest Neighbor Search}},
-   url = {https://github.com/Microsoft/DiskANN},
-   version = {0.6.1},
-   year = {2023}
+    title = {{DiskANN: Graph-structured Indices for Scalable, Fast, Fresh and
+             Filtered Approximate Nearest Neighbor Search}},
+    url = {https://github.com/Microsoft/DiskANN},
+    version = {0.6.1},
+    year = {2023},
 }
 
 @article{faiss-github,
@@ -115,4 +115,157 @@
            },
     HAL_ID = {inria-00514462},
     HAL_VERSION = {v2},
+}
+
+@article{freshdiskann,
+    author = {Aditi Singh and Suhas Jayaram Subramanya and Ravishankar
+              Krishnaswamy and Harsha Vardhan Simhadri},
+    title = {{FreshDiskANN: {A} Fast and Accurate Graph-Based {ANN} Index for
+             Streaming Similarity Search}},
+    journal = {CoRR},
+    volume = {abs/2105.09613},
+    year = {2021},
+    url = {https://arxiv.org/abs/2105.09613},
+    eprinttype = {arXiv},
+    eprint = {2105.09613},
+    timestamp = {Mon, 31 May 2021 16:16:57 +0200},
+    biburl = {https://dblp.org/rec/journals/corr/abs-2105-09613.bib},
+    bibsource = {dblp computer science bibliography, https://dblp.org},
+}
+
+@article{hash-idec,
+    author = {Gong, Long and Wang, Huayi and Ogihara, Mitsunori and Xu, Jun},
+    title = {{IDEC: Indexable Distance Estimating Codes for Approximate Nearest
+             Neighbor Search}},
+    year = {2020},
+    issue_date = {May 2020},
+    publisher = {VLDB Endowment},
+    volume = {13},
+    number = {9},
+    issn = {2150-8097},
+    url = {https://doi.org/10.14778/3397230.3397243},
+    doi = {10.14778/3397230.3397243},
+    abstract = {Approximate Nearest Neighbor (ANN) search is a fundamental
+                algorithmic problem, with numerous applications in many areas of
+                computer science. In this work, we propose indexable distance
+                estimating codes (iDEC), a new solution framework to ANN that
+                extends and improves the locality sensitive hashing (LSH)
+                framework in a fundamental and systematic way. Empirically, an
+                iDEC-based solution has a low index space complexity of O(n) and
+                can achieve a low average query time complexity of approximately
+                O(log n). We show that our iDEC-based solutions for ANN in
+                Hamming and edit distances outperform the respective
+                state-of-the-art LSH-based solutions for both in-memory and
+                external-memory processing. We also show that our iDEC-based
+                in-memory ANN-H solution is more scalable than all existing
+                solutions. We also discover deep connections between
+                Error-Estimating Codes (EEC), LSH, and iDEC.},
+    journal = {Proc. VLDB Endow.},
+    month = {may},
+    pages = {1483–1497},
+    numpages = {15},
+}
+
+@article{hash-qalsh,
+    author = {Huang, Qiang and Feng, Jianlin and Zhang, Yikai and Fang, Qiong
+              and Ng, Wilfred},
+    title = {{Query-Aware Locality-Sensitive Hashing for Approximate Nearest
+             Neighbor Search}},
+    year = {2015},
+    issue_date = {September 2015},
+    publisher = {VLDB Endowment},
+    volume = {9},
+    number = {1},
+    issn = {2150-8097},
+    url = {https://doi.org/10.14778/2850469.2850470},
+    doi = {10.14778/2850469.2850470},
+    abstract = {Locality-Sensitive Hashing (LSH) and its variants are the
+                well-known indexing schemes for the c-Approximate Nearest
+                Neighbor (c-ANN) search problem in high-dimensional Euclidean
+                space. Traditionally, LSH functions are constructed in a
+                query-oblivious manner in the sense that buckets are partitioned
+                before any query arrives. However, objects closer to a query may
+                be partitioned into different buckets, which is undesirable. Due
+                to the use of query-oblivious bucket partition, the
+                state-of-the-art LSH schemes for external memory, namely C2LSH
+                and LSB-Forest, only work with approximation ratio of integer c ≥
+                2.In this paper, we introduce a novel concept of query-aware
+                bucket partition which uses a given query as the "anchor" for
+                bucket partition. Accordingly, a query-aware LSH function is a
+                random projection coupled with query-aware bucket partition,
+                which removes random shift required by traditional
+                query-oblivious LSH functions. Notably, query-aware bucket
+                partition can be easily implemented so that query performance is
+                guaranteed. We propose a novel query-aware LSH scheme named QALSH
+                for c-ANN search over external memory. Our theoretical studies
+                show that QALSH enjoys a guarantee on query quality. The use of
+                query-aware LSH function enables QALSH to work with any
+                approximation ratio c > 1. Extensive experiments show that QALSH
+                outperforms C2LSH and LSB-Forest, especially in high-dimensional
+                space. Specifically, by using a ratio c < 2, QALSH can achieve
+                much better query quality.},
+    journal = {Proc. VLDB Endow.},
+    month = {sep},
+    pages = {1–12},
+    numpages = {12},
+}
+
+@article{tree-hdindex,
+    author = {Arora, Akhil and Sinha, Sakshi and Kumar, Piyush and Bhattacharya,
+              Arnab},
+    title = {{HD-Index: Pushing the Scalability-Accuracy Boundary for
+             Approximate KNN Search in High-Dimensional Spaces}},
+    year = {2018},
+    issue_date = {April 2018},
+    publisher = {VLDB Endowment},
+    volume = {11},
+    number = {8},
+    issn = {2150-8097},
+    url = {https://doi.org/10.14778/3204028.3204034},
+    doi = {10.14778/3204028.3204034},
+    abstract = {Nearest neighbor searching of large databases in
+                high-dimensional spaces is inherently difficult due to the curse
+                of dimensionality. A flavor of approximation is, therefore,
+                necessary to practically solve the problem of nearest neighbor
+                search. In this paper, we propose a novel yet simple indexing
+                scheme, HD-Index, to solve the problem of approximate k-nearest
+                neighbor queries in massive high-dimensional databases. HD-Index
+                consists of a set of novel hierarchical structures called
+                RDB-trees built on Hilbert keys of database objects. The leaves
+                of the RDB-trees store distances of database objects to reference
+                objects, thereby allowing efficient pruning using distance
+                filters. In addition to triangular inequality, we also use
+                Ptolemaic inequality to produce better lower bounds. Experiments
+                on massive (up to billion scale) high-dimensional (up to 1000+)
+                datasets show that HD-Index is effective, efficient, and
+                scalable.},
+    journal = {Proc. VLDB Endow.},
+    month = {apr},
+    pages = {906–919},
+    numpages = {14},
+}
+
+@inproceedings{tree-optkd,
+    author = {Silpa-Anan, Chanop and Hartley, Richard},
+    booktitle = {2008 IEEE Conference on Computer Vision and Pattern Recognition
+                 },
+    title = {{Optimised KD-trees for fast image descriptor matching}},
+    year = {2008},
+    volume = {},
+    number = {},
+    pages = {1-8},
+    doi = {10.1109/CVPR.2008.4587638},
+}
+
+@article{nsg,
+    author = {Cong Fu and Chao Xiang and Changxu Wang and Deng Cai},
+    title = {{Fast Approximate Nearest Neighbor Search With The Navigating
+             Spreading-out Graphs}},
+    journal = {{PVLDB}},
+    volume = {12},
+    number = {5},
+    pages = {461 - 474},
+    year = {2019},
+    url = {http://www.vldb.org/pvldb/vol12/p461-fu.pdf},
+    doi = {10.14778/3303753.3303754},
 }

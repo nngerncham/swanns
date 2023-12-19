@@ -1,11 +1,8 @@
 \chapter{Algorithms}
 
-In general, graph-based ANNS algorithms are separated into two main phases.
-\begin{enumerate}
-    \item Index construction
-    \item Search 
-\end{enumerate}
-The search phase is very similar across all algorithms. In short, it is simply a \textsc{GreedySearch} (Algorithm \ref{alg:greedy-search}) algorithm that is modified to fit the specific graph structure. The main difference between algorithms lies in the index construction step---how the graph is constructed and how the vertices inside it are connected.
+Graph-based ANNS algorithms are generally separated into two phases: Index construction and Search.
+
+The search phase is very similar across all algorithms. In short, it is simply a \textsc{GreedySearch} algorithm (Algorithm \ref{alg:greedy-search}) modified to fit the specific graph structure. The main difference between algorithms lies in the index construction step---how the graph is constructed and how the vertices inside it are connected.
 
 \section{Search}
 
@@ -36,7 +33,16 @@ The search phase is very similar across all algorithms. In short, it is simply a
     \end{algorithmic}
 \end{algorithm}
 
-Intuitively, \textsc{GreedySearch} searches for the query \(q\) by first storing a collection of nearest neighbor candidates \(\mathcal{L}\) and a collection of visited vertices \(\mathcal{V}\). Starting from some starting point \(s\) (usually determined by the graph), it greedily picks its neighbor that is closest to \(q\) and traverses the graph until it cannot anymore. A visualization of this can be see in Figure \ref{fig:greedy-viz}.
+Intuitively, \textsc{GreedySearch} searches for the query \(q\) by first storing a collection of nearest neighbor candidates \(\mathcal{L}\) and a collection of visited vertices \(\mathcal{V}\). Starting from some starting point \(s\) (usually determined by the graph), it greedily picks its neighbors that are closest to \(q\) and traverses the graph until it cannot anymore. 
+A visualization of this can be seen in Figure \ref{fig:greedy-viz}.
+
+% For example, consider running \textsc{GreedySearch} with \(L=k=20\) and the neighbors of a vertex are its nearest neighbors. The data set, the starting point \(p\), and the query point \(q\) can be seen in Figure \ref{fig:gs-input}.
+% \begin{enumerate}
+%     \item Next, the neighbors of \(s\) are added to \(\mathcal{L}\) as shown in Figure \ref{fig:gs1}. Note that red now represents \(\mathcal{V}\) and the first visited point is \(s\).
+%     \item Then, the point \(p^*\) in \(\mathcal{L}\) closest to \(q\) (right red point) is visited and its neighbors are added to \(\mathcal{L}\) as shown in Figure \ref{fig:gs2}. Note that since \(L=k\) and every neighbor of \(p^*\) is closer to \(q\) than the previously visited point, \(\mathcal{L}\) is replaced with the neighbors of \(p^*\).
+%     \item This is repeated until \textsc{GreedySearch} terminates as shown in Figure \ref{fig:gs3} and \ref{fig:gs4}.
+%     \item Finally, the approximate nearest neighbors \(\mathcal{L}\) and the visited vertices---the path from start to query---\(\mathcal{V}\) are returned as shown in Figure \ref{fig:gs-return}.
+% \end{enumerate}
 
 \begin{figure}[ht]
     \centering
@@ -44,16 +50,19 @@ Intuitively, \textsc{GreedySearch} searches for the query \(q\) by first storing
     \begin{subfigure}{0.31\textwidth}
         \includegraphics[width=\textwidth]{images/greedy-search-begin}
         \caption{Input}
+        \label{fig:gs-input}
     \end{subfigure}
     \hfill
     \begin{subfigure}{0.31\textwidth}
         \includegraphics[width=\textwidth]{images/greedy-search-1}
         \caption{Iteration 1}
+        \label{fig:gs1}
     \end{subfigure}
     \hfill
     \begin{subfigure}{0.31\textwidth}
         \includegraphics[width=\textwidth]{images/greedy-search-2}
         \caption{Iteration 2}
+        \label{fig:gs2}
     \end{subfigure}
     \hfill
 
@@ -61,27 +70,28 @@ Intuitively, \textsc{GreedySearch} searches for the query \(q\) by first storing
     \begin{subfigure}{0.31\textwidth}
         \includegraphics[width=\textwidth]{images/greedy-search-3}
         \caption{Iteration 3}
+        \label{fig:gs3}
     \end{subfigure}
     \hfill
     \begin{subfigure}{0.31\textwidth}
         \includegraphics[width=\textwidth]{images/greedy-search-4}
         \caption{Iteration 4}
+        \label{fig:gs4}
     \end{subfigure}
     \hfill
     \begin{subfigure}{0.31\textwidth}
         \includegraphics[width=\textwidth]{images/greedy-search-final}
         \caption{Returning values}
+        \label{fig:gs-return}
     \end{subfigure}
     \hfill
     \caption{Visualization of \textsc{GreedySearch}}
     \label{fig:greedy-viz}
 \end{figure}
 
-In addition, we can see in Figure \ref{fig:greedy-viz} that the collection of visited vertices \(\mathcal{V}\) can be thought of as the path from the starting point \(s\) to the query point \(q\) as well.
-
 \section{Index Construction}
 
-Similar to the search phase, the index construction phase have similar flows across algorithms as well. The general flow can be seen in Algorithm \ref{alg:build-index}.
+Similar to the search phase, the index construction phase has similar flows across algorithms as well. The general flow can be seen in Algorithm \ref{alg:build-index}.
 
 \begin{algorithm}[H]
     \caption{\textsc{BuildIndex}(Data \(\mathcal{P}\), Start point \(s\), Beam width \(L\), Degree bound \(M\))}
@@ -95,11 +105,11 @@ Similar to the search phase, the index construction phase have similar flows acr
     \end{algorithmic}
 \end{algorithm}
 
-Intuitively, the algorithm adds the point \(p\) into the graph as a vertex, runs a search to \(p\), and assigns the \textit{path} from the starting point \(s\) to \(p\) after it has been pruned using some heuristics determined by the graph.
+Intuitively, the algorithm adds the point \(p\) into the graph as a vertex, runs a search to \(p\), and assigns the \textit{path} from the starting point \(s\) to \(p\) after it has been pruned using the heuristic determined by the graph.
 
 \section{HNSW and DiskANN}
 
-Among the existing ANNS algorithms, there are two outstanding algorithms: Hierarchical Navigable Small World (HNSW) and DiskANN. Since vertex removal should not degrade the performance and quality of the graph, it is better to design the removal algorithm on top of an existing algorithm instead of starting from scratch.
+Since vertex removal should not degrade the performance and quality of the graph, it is better to design the removal algorithm on top of an existing algorithm that already performs well instead of starting from scratch. Among the existing graph-based ANNS algorithms, Hierarchical Navigable Small World (HNSW) \cite{hnsw} and DiskANN \cite{diskann-paper} are two of the best performing ones. That is, at a fixed target accuracy level, they are able to answer high number of queries per second (QPS) \cite{annscaling,survey2} while having comparable or better build times compared to other graph-based algorithms \cite{annscaling}.
 
 \begin{figure}[ht]
     \centering
@@ -107,14 +117,14 @@ Among the existing ANNS algorithms, there are two outstanding algorithms: Hierar
     \begin{subfigure}{0.45\textwidth}
         \centering
         \includegraphics[height=0.2\textheight]{images/hnsw}
-        \caption{Hierarchical Navigable Small World (HNSW)}
+        \caption{HNSW \cite{hnsw}}
         \label{fig:hnsw-viz}
     \end{subfigure}
     \hfill
     \begin{subfigure}{0.45\textwidth}
         \centering
         \includegraphics[height=0.2\textheight]{images/diskann}
-        \caption{DiskANN}
+        \caption{DiskANN \cite{diskann-paper}}
         \label{fig:diskann-viz}
     \end{subfigure}
     \hfill
@@ -123,9 +133,9 @@ Among the existing ANNS algorithms, there are two outstanding algorithms: Hierar
 
 \subsection{Hierarchical Navigable Small World (HNSW)}
 
-As shown in Figure \ref{fig:hnsw-viz}, HNSW is a multi-layer graph where the points are \textit{promoted} and cloned to higher layers based on exponentially decaying probability. That is, the probability makes it so that less and less points show up in higher layer.
+As shown in Figure \ref{fig:hnsw-viz}, HNSW is a multi-layer graph where the points are \textit{promoted} and cloned to higher layers based on exponentially decaying probability. That is, the probability makes it so that fewer points show up in higher layers.
 
-HNSW constructs its graphs incrementally by adding the points to the graph one-by-one. The construction first decides which layer the new point belongs to and run Algorithm \ref{alg:build-index} on each layer top to bottom. As for its pruning criteria, it ensures that there is a small, circular radius around the new point. The search is done on every layer but the \(k\) nearest neighbors are only picked from the lowest layer.
+HNSW constructs its graph incrementally by adding the points to the graph one-by-one. The construction first decides which layer the new point belongs to and run Algorithm \ref{alg:build-index} on each layer from top to bottom. As for its pruning criteria, it ensures that there is a small, circular radius around the new point. The search is done on every layer but the \(k\) nearest neighbors are only picked from the lowest layer.
 
 % \begin{algorithm}[H]
 % \caption{SelectNeighbors Algorithm}\label{alg:select-nbrs}
@@ -166,7 +176,7 @@ HNSW constructs its graphs incrementally by adding the points to the graph one-b
 
 DiskANN works in a similar way to HNSW but in a single layer. As shown in Figure \ref{fig:diskann-viz}, it constructs a graph with both short and long edges within a single layer and the connections spread out from the center of the graph which is the starting point.
 
-The construction is rather simple. It is essentially Algorithm \ref{alg:build-index} with the medoid of the data set being the starting point. The pruning criteria ensures that the points in the path from the starting point to the new point are not to close to each other. The search is essentially Algorithm \ref{alg:greedy-search} starting from the medoid.
+The construction is rather simple. It is essentially Algorithm \ref{alg:build-index} with the medoid of the data set being the starting point. The pruning criteria ensures that the points in the path from the starting point to the new point are not too close to each other. The search is essentially Algorithm \ref{alg:greedy-search} starting from the medoid.
 
 % \begin{algorithm}[H]
 % \caption{RobustPrune Algorithm}\label{alg:robust-prune}

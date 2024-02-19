@@ -6,4 +6,8 @@ lazy val root = (project in file("."))
   .settings(
     name := "RemoveComparison",
     idePackagePrefix := Some("muic.nawat.senior.rmcomp")
+
   )
+
+libraryDependencies +=
+  "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4"

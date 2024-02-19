@@ -1,10 +1,13 @@
 package muic.nawat.senior.rmcomp
 package models
 
-class Tracker(var distComparisons: Int,
-              var pathLengths: Int,
-              var recall: Float,
-              var qps: Int) {
+@SerialVersionUID(100L)
+class Tracker extends Serializable {
+  private var distComparisons: Int = 0
+  private var pathLengths: Int     = 0
+  private var recall: Float        = 0
+  private var qps: Int             = 0
+
   def addDistComps(n: Int): Unit = {
     distComparisons = distComparisons + n
   }

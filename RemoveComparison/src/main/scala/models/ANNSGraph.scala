@@ -2,8 +2,6 @@ package muic.nawat.senior.rmcomp
 package models
 
 type Point = Array[Float]
-type Neighbor = (Int, Float)
-
 
 trait ANNSGraph {
   def batchAdd(newPoints: Seq[Point]): Unit
@@ -12,7 +10,7 @@ trait ANNSGraph {
 
   //  def batchRemove(indexes: Array[Int]): Unit
 
-  def search(query: Point, k: Int): Array[Neighbor]
+  def search(query: Point, k: Int): Array[(Int, Float)]
 
   def saveIndex(path: String): Unit
 }

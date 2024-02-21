@@ -1,7 +1,6 @@
 package muic.nawat.senior.rmcomp
 package models
 
-@SerialVersionUID(100L)
 class Tracker extends Serializable {
   private var distComparisons: Int = 0
   private var pathLengths: Int     = 0

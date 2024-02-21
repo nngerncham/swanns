@@ -1,42 +1,60 @@
 package muic.nawat.senior.rmcomp
 
-import models.{DiskANN, Tracker, readFvecIntoPoints, computeMedoidIdx}
+import models.{DiskANN, Tracker, computeGroundTruths, readFvecIntoPoints}
 
 @main
 def main(): Unit = {
   val siftSmall = readFvecIntoPoints(
     "/home/nawat/muic/senior/data/siftsmall/base.fvecs"
-  ).take(50)
-
+  ).take(500)
   val tracker = new Tracker()
-  // val index   = new DiskANN(200, 70, 2.0, tracker, 10_000)
-  val index = new DiskANN(16, 8, 1.0, tracker, 10_000)
-  index.batchAdd(siftSmall)
-  // println(computeMedoidIdx(siftSmall))
-  index.saveIndex(
-    "/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall.index"
+  val builder = new DiskANN(32, 32, 1.2, tracker, 10_000)
+  builder.batchAdd(siftSmall)
+  builder.saveIndex(
+    "/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall500.index"
   )
 
-  val index2 = new DiskANN(
-    "/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall.index"
+  val siftSmallQuery = readFvecIntoPoints(
+    "/home/nawat/muic/senior/data/siftsmall/query.fvecs"
+  ) // 100 queries
+
+  val kToTest = 100
+  val index = DiskANN.loadIndex(
+    "/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall500.index"
   )
+  val annsSearchResults = siftSmallQuery.map(index.search(_, kToTest))
 
-  println("" + index.searchSize + " " + index2.searchSize)
-  println("" + index.degreeBound + " " + index2.degreeBound)
-  println("" + index.alpha + " " + index2.alpha)
-  println("" + index.maxIndexSize + " " + index2.maxIndexSize)
+  println("Computing ground truth")
+  val siftSmallGT = computeGroundTruths(siftSmall, siftSmallQuery, kToTest)
+  val groundTruthOutput = new java.io.ObjectOutputStream(
+    new java.io.FileOutputStream(
+      "/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall500.gt"
+    )
+  )
+  groundTruthOutput.writeObject(siftSmallGT)
+  groundTruthOutput.close()
+//  val siftSmallGT = {
+//    val groundTruthInput = new java.io.ObjectInputStream(
+//      new java.io.FileInputStream(
+//        "/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall500.gt"
+//      )
+//    )
+//    val result =
+//      groundTruthInput.readObject().asInstanceOf[Vector[Array[(Int, Double)]]]
+//    groundTruthInput.close()
+//    result
+//  }
 
-  println("" + index.startingIdx + " " + index2.startingIdx)
-  println("" + index.startingIdx + " " + index2.startingIdx)
+  println("Computing recall")
+  val siftSmallRecalls =
+    annsSearchResults
+      .zip(siftSmallGT)
+      .map({ case (anns, gt) =>
+        val annsSet = anns.map({ case (i, _) => i }).toSet
+        val gtSet   = gt.map({ case (i, _) => i }).toSet
 
-  index.points
-    .zip(index2.points)
-    .foreach({ case (a, b) =>
-      println("" + a + "," + b)
-    })
-  index.neighborhoods
-    .zip(index2.neighborhoods)
-    .foreach({ case (a, b) =>
-      println("" + a + "," + b)
-    })
+        (annsSet intersect gtSet).size.toDouble / kToTest.toDouble
+      })
+  val recall = siftSmallRecalls.sum / siftSmallRecalls.size.toDouble
+  println(s"Recall@$kToTest: $recall")
 }

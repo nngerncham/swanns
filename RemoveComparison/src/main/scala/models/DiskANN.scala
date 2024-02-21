@@ -1,13 +1,13 @@
 package muic.nawat.senior.rmcomp
 package models
 
+import scala.annotation.targetName
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.math.Ordering
 
-@SerialVersionUID(100L)
 class DiskANN(
   var searchSize: Int,
   var degreeBound: Int,
@@ -16,68 +16,45 @@ class DiskANN(
   var maxIndexSize: Int
 ) extends ANNSGraph
     with Serializable {
-  var startingIdx: Int                                       = -1
-  var points: Vector[Point]                                  = Vector.empty
-  var neighborhoods: Vector[mutable.PriorityQueue[Neighbor]] = Vector.empty
+  var startingIdx: Int                = -1
+  var points: Vector[Point]           = Vector.empty
+  var neighborhoods: Vector[Set[Int]] = Vector.empty
 
-  def this(pathToIndex: String) = {
-    this(0, 0, 0, new Tracker(), 1)
-    val oi =
-      new java.io.ObjectInputStream(new java.io.FileInputStream(pathToIndex))
-    val index = oi.readObject().asInstanceOf[DiskANN]
-
-    this.startingIdx = index.startingIdx
-    this.points = index.points
-    this.neighborhoods = index.neighborhoods
-    this.searchSize = index.searchSize
-    this.degreeBound = index.degreeBound
-    this.alpha = index.alpha
-    this.tracker = index.tracker
-    this.maxIndexSize = index.maxIndexSize
-  }
-
+  @targetName("equalsDiskANN")
   def ==(other: DiskANN): Boolean = {
     this.startingIdx == other.startingIdx &&
-    this.points == other.points &&
-    this.neighborhoods == other.neighborhoods &&
     this.searchSize == other.searchSize &&
     this.degreeBound == other.degreeBound &&
     this.alpha == other.alpha &&
-    this.maxIndexSize == other.maxIndexSize
+    this.maxIndexSize == other.maxIndexSize &&
+//    this.points == other.points
+    this.neighborhoods == other.neighborhoods
   }
 
-  private def robustPrune(
-    point: Int,
-    candidates: Vector[Int]
-  ): mutable.PriorityQueue[Neighbor] = {
-    val candidateIndexes = candidates ++ neighborhoods(point).map({
-      case (idx, dist) => idx
-    })
+  private def robustPrune(pointIdx: Int, candidates: Vector[Int]): Set[Int] = {
+    val candidateIndexes =
+      (candidates ++ neighborhoods(pointIdx)).toSet - pointIdx
     val candidatePairFutures = Future.sequence(
       candidateIndexes.map(idx =>
-        Future {
-          (idx, distance(points(point), points(idx)))
-        }
+        Future { (idx, distance(points(pointIdx), points(idx))) }
       )
     )
-    val candidatePairs = Await.result(candidatePairFutures, Duration.Inf)
-
-    val candidateExtended = mutable.PriorityQueue.empty[(Int, Float)](
-      Ordering.by[Neighbor, Float](_._2)
+    val candidatePQ = mutable.PriorityQueue.empty[(Int, Float)](
+      Ordering.by[(Int, Float), Float](-_._2)
     )
-    candidatePairs.foreach(candidateExtended.enqueue(_))
+    val candidatePairs = Await.result(candidatePairFutures, Duration.Inf)
+    candidatePairs.foreach(candidatePQ.enqueue(_))
 
-    val newNeighborhood =
-      mutable.PriorityQueue.empty[Neighbor](Ordering.by[Neighbor, Float](_._2))
+    var newNeighborhood = Set[Int]()
 
-    while (candidateExtended.nonEmpty) {
-      val (pStarIdx, pStarDist) = candidateExtended.dequeue()
-      newNeighborhood.enqueue((pStarIdx, pStarDist))
+    while (candidatePQ.nonEmpty) {
+      val (pStarIdx, pStarDist) = candidatePQ.dequeue()
+      newNeighborhood = newNeighborhood + pStarIdx
       if (newNeighborhood.size >= degreeBound) {
         return newNeighborhood
       }
 
-      candidateExtended.filter({ case (pPrimeIdx, pPrimeDist) =>
+      candidatePQ.filter({ case (pPrimeIdx, pPrimeDist) =>
         alpha * distance(points(pStarIdx), points(pPrimeIdx)) > pPrimeDist
       })
     }
@@ -88,23 +65,24 @@ class DiskANN(
   private def greedySearch(
     query: Point,
     k: Int
-  ): (Array[Neighbor], Vector[Int]) = {
-    var beam =
-      mutable.PriorityQueue.empty[Neighbor](Ordering.by[Neighbor, Float](_._2))
+  ): (Array[(Int, Float)], Vector[Int]) = {
+    var beam = mutable.PriorityQueue.empty[(Int, Float)](
+      Ordering.by[(Int, Float), Float](-_._2)
+    )
     beam.enqueue((startingIdx, distance(points(startingIdx), query)))
-    val visited = mutable.Set.empty[Int]
+    val visited = mutable.Set[Int]()
 
     while (beam.nonEmpty) {
       val (pStarIdx, pStarDist) = beam.dequeue()
 
-      neighborhoods(pStarIdx).foreach({ case (pPrimeIdx, pPrimeDist) =>
+      neighborhoods(pStarIdx).foreach(pPrimeIdx => {
         if (!visited.contains(pPrimeIdx)) {
           beam.enqueue((pPrimeIdx, distance(points(pPrimeIdx), query)))
         }
       })
       visited += pStarIdx
 
-      if (beam.size >= searchSize) {
+      if (beam.size > searchSize) {
         beam = beam.take(searchSize)
       }
     }
@@ -125,94 +103,131 @@ class DiskANN(
 
       // initializes G as a random R-regular graph
       val rng = new scala.util.Random()
-      val neighborhoodFutures = Future.sequence(
-        this.points.indices
-          .zip(this.points)
-          .map({ case (idx, point) =>
-            Future {
-              val neighborhood = mutable.PriorityQueue
-                .empty[Neighbor](Ordering.by[Neighbor, Float](_._2))
-              while (neighborhood.size < degreeBound) {
-                val candidateIdx = rng.nextInt(this.points.size)
-                if (
-                  candidateIdx != idx && !neighborhood.exists({
-                    case (neighborIdx, _) => neighborIdx == candidateIdx
-                  })
-                ) {
-                  neighborhood.enqueue(
-                    (candidateIdx, distance(point, this.points(candidateIdx)))
-                  )
-                }
-              }
-              neighborhood
+      val neighborhoodFutures = Future.sequence(this.points.indices.map({ idx =>
+        Future {
+          var neighborhood = Set[Int]()
+          while (neighborhood.size < degreeBound) {
+            val neighborIdx = rng.nextInt(this.points.size)
+            if (neighborIdx != idx) {
+              neighborhood = neighborhood + neighborIdx
             }
-          })
-      )
+          }
+          neighborhood
+        }
+      }))
       this.neighborhoods =
         Await.result(neighborhoodFutures, Duration.Inf).toVector
       println("Random graph initialized")
       this.startingIdx = computeMedoidIdx(this.points)
       println("Medoid computed")
 
-      this.points.indices
-        .zip(this.points)
-        .foreach({ case (idx, point) =>
+//      val pruningNeighborhoods = Future.sequence(
+//        this.points.indices
+//          .zip(this.points)
+//          .map({ case (pointIdx, point) =>
+//            Future {
+//              val (candidates, path) = greedySearch(point, 1)
+//              val prunedCandidates   = robustPrune(pointIdx, path)
+//              synchronized {
+//                this.neighborhoods =
+//                  this.neighborhoods.updated(pointIdx, prunedCandidates)
+//              }
+//            }
+//          })
+//      )
+//      Await.result(pruningNeighborhoods, Duration.Inf)
+//      this.points.indices
+//        .zip(this.points)
+//        .map({ case (pointIdx, point) =>
+//          Future {
+//            this
+//              .neighborhoods(pointIdx)
+//              .foreach(nbrIdx => {
+//                if (
+//                  (this.neighborhoods(nbrIdx) + pointIdx).size > degreeBound
+//                ) {
+//                  synchronized {
+//                    this.neighborhoods = this.neighborhoods
+//                      .updated(
+//                        nbrIdx,
+//                        robustPrune(
+//                          nbrIdx,
+//                          (this.neighborhoods(nbrIdx) + pointIdx).toVector
+//                        )
+//                      )
+//                  }
+//                } else {
+//                  synchronized {
+//                    this.neighborhoods = this.neighborhoods
+//                      .updated(nbrIdx, this.neighborhoods(nbrIdx) + pointIdx)
+//                  }
+//                }
+//              })
+//          }
+//        })
+      this.points.zipWithIndex
+        .foreach({ case (point, pointIdx) =>
           val (candidates, path) = greedySearch(point, 1)
+          val prunedCandidates   = robustPrune(pointIdx, path)
           this.neighborhoods =
-            this.neighborhoods.updated(idx, robustPrune(idx, path))
+            this.neighborhoods.updated(pointIdx, prunedCandidates)
 
           this
-            .neighborhoods(idx)
-            .foreach({ case (neighborIdx, neighborDist) =>
-              val neighborIndexes = this
-                .neighborhoods(neighborIdx)
-                .map({ case (idx, _) => idx })
-                .toSet
-              if ((neighborIndexes + idx).size > degreeBound) {
-                val neighborhoodToPrune = this
-                  .neighborhoods(neighborIdx)
-                  .map({ case (idx, _) => idx })
-                  .toVector :+ idx
-                val prunedNeighborhood =
-                  robustPrune(neighborIdx, neighborhoodToPrune)
+            .neighborhoods(pointIdx)
+            .foreach(neighborIdx => {
+              if (
+                (this.neighborhoods(neighborIdx) + pointIdx).size > degreeBound
+              ) {
+                this.neighborhoods = this.neighborhoods.updated(
+                  neighborIdx,
+                  robustPrune(
+                    neighborIdx,
+                    (this.neighborhoods(neighborIdx) + pointIdx).toVector
+                  )
+                )
               } else {
-                this.neighborhoods(neighborIdx).enqueue((idx, neighborDist))
+                this.neighborhoods = this.neighborhoods.updated(
+                  neighborIdx,
+                  this.neighborhoods(neighborIdx) + pointIdx
+                )
               }
             })
         })
+      println("Fixing out-neighborhoods done")
+
     } else {
-      val startingN = this.points.size
-      this.points = this.points ++ newPoints
-
-      newPoints.indices
-        .zip(newPoints)
-        .foreach({ case (idxSurplus, point) =>
-          val (candidates, path) = greedySearch(point, 1)
-          val prunedCandidates   = robustPrune(startingN + idxSurplus, path)
-
-          prunedCandidates.foreach({ case (neighborIdx, neighborDist) =>
-            this
-              .neighborhoods(neighborIdx)
-              .enqueue((startingN + idxSurplus, neighborDist))
-
-            if (this.neighborhoods(neighborIdx).size > degreeBound) {
-              val neighborhoodToPrune = this
-                .neighborhoods(neighborIdx)
-                .map({ case (idx, _) => idx })
-                .toVector :+ (startingN + idxSurplus)
-              val prunedNeighborhood =
-                robustPrune(neighborIdx, neighborhoodToPrune)
-              this.neighborhoods =
-                this.neighborhoods.updated(neighborIdx, prunedNeighborhood)
-            }
-          })
-        })
+//      val startingN = this.points.size
+//      this.points = this.points ++ newPoints
+//
+//      newPoints.indices
+//        .zip(newPoints)
+//        .foreach({ case (idxSurplus, point) =>
+//          val (candidates, path) = greedySearch(point, 1)
+//          val prunedCandidates   = robustPrune(startingN + idxSurplus, path)
+//
+//          prunedCandidates.foreach({ case (neighborIdx, neighborDist) =>
+//            this
+//              .neighborhoods(neighborIdx)
+//              .enqueue((startingN + idxSurplus, neighborDist))
+//
+//            if (this.neighborhoods(neighborIdx).size > degreeBound) {
+//              val neighborhoodToPrune = this
+//                .neighborhoods(neighborIdx)
+//                .map({ case (idx, _) => idx })
+//                .toVector :+ (startingN + idxSurplus)
+//              val prunedNeighborhood =
+//                robustPrune(neighborIdx, neighborhoodToPrune)
+//              this.neighborhoods =
+//                this.neighborhoods.updated(neighborIdx, prunedNeighborhood)
+//            }
+//          })
+//        })
     }
   }
 
   override def remove(index: Int): Unit = ???
 
-  override def search(query: Point, k: Int): Array[Neighbor] = {
+  override def search(query: Point, k: Int): Array[(Int, Float)] = {
     val (result, _) = greedySearch(query, k)
     result
   }
@@ -221,5 +236,14 @@ class DiskANN(
     val oos = new java.io.ObjectOutputStream(new java.io.FileOutputStream(path))
     oos.writeObject(this)
     oos.close()
+  }
+}
+
+object DiskANN {
+  def loadIndex(path: String): DiskANN = {
+    val ois   = new java.io.ObjectInputStream(new java.io.FileInputStream(path))
+    val index = ois.readObject().asInstanceOf[DiskANN]
+    ois.close()
+    index
   }
 }

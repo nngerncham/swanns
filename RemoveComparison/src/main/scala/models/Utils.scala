@@ -16,28 +16,61 @@ def distance(p1: Point, p2: Point): Float = {
   Math.sqrt(p1.zip(p2).map({ case (a, b) => Math.pow(a - b, 2) }).sum).toFloat
 }
 
-def computeMedoidIdx(points: Vector[Point])(implicit samplingRatio: Float = 0.1): Int = {
+def computeMedoidIdx(
+  points: Vector[Point]
+)(implicit samplingRatio: Float = 0.1): Int = {
   // takes O(n^2) time but whatever
-  val n = points.length
+  val n          = points.length
   val sampleSize = (n * samplingRatio).toInt
-  val sample = Random.shuffle(points).take(sampleSize)
+  val sample     = Random.shuffle(points.zipWithIndex).take(sampleSize)
 
-  val distancesFuture = Future.sequence(sample.zipWithIndex.map({ case (p1, i) =>
-    Future {
-      val dist = sample.map(p2 => distance(p1, p2)).sum
-      (i, dist)
-    }
-  }))
-  val distances = Await.result(distancesFuture, Duration.Inf)
+  val distancesFuture =
+    Future.sequence(sample.map({ case (p1, i) =>
+      Future {
+        val dist = sample.map({ case (p2, _) => distance(p1, p2) }).sum
+        (i, dist)
+      }
+    }))
+  val distances     = Await.result(distancesFuture, Duration.Inf)
   val (minIndex, _) = distances.minBy(_._2)
   minIndex
 }
 
 def readFvecIntoPoints(fvecFilePath: String): Vector[Point] = {
   val rawBytes = Files.readAllBytes(Paths.get(fvecFilePath))
-  val dims = ByteBuffer.wrap(rawBytes.take(4)).order(ByteOrder.LITTLE_ENDIAN).getInt
-  val rawFloats = rawBytes.grouped(4).map(byteArr => {
-    ByteBuffer.wrap(byteArr).order(ByteOrder.LITTLE_ENDIAN).getFloat
-  }).toVector
+  val dims =
+    ByteBuffer.wrap(rawBytes.take(4)).order(ByteOrder.LITTLE_ENDIAN).getInt
+  val rawFloats = rawBytes
+    .grouped(4)
+    .map(byteArr => {
+      ByteBuffer.wrap(byteArr).order(ByteOrder.LITTLE_ENDIAN).getFloat
+    })
+    .toVector
   rawFloats.grouped(dims + 1).map(_.tail.toArray).toVector
+}
+
+def computeGroundTruths(
+  dataset: Vector[Point],
+  queryData: Vector[Point],
+  k: Int
+): Vector[Array[(Int, Float)]] = {
+  val kNNFutures = Future.sequence(
+    queryData.map(queryPoint =>
+      Future {
+        dataset.zipWithIndex
+          .map({ case (basePoint, i) => (i, distance(queryPoint, basePoint)) })
+          .sortBy(_._2)
+          .take(k)
+          .toArray
+      }
+    )
+  )
+  Await.result(kNNFutures, Duration.Inf)
+//  queryData.map(queryPoint =>
+//    dataset.zipWithIndex
+//      .map({ case (basePoint, i) => (i, distance(queryPoint, basePoint)) })
+//      .sortBy(_._2)
+//      .take(k)
+//      .toArray
+//  )
 }

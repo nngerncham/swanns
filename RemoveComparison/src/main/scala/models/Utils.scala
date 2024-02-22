@@ -18,7 +18,7 @@ def distance(p1: Point, p2: Point): Float = {
 
 def computeMedoidIdx(
   points: Vector[Point]
-)(implicit samplingRatio: Float = 0.1): Int = {
+)(implicit samplingRatio: Float = 0.33): Int = {
   // takes O(n^2) time but whatever
   val n          = points.length
   val sampleSize = (n * samplingRatio).toInt
@@ -54,23 +54,23 @@ def computeGroundTruths(
   queryData: Vector[Point],
   k: Int
 ): Vector[Array[(Int, Float)]] = {
-  val kNNFutures = Future.sequence(
-    queryData.map(queryPoint =>
-      Future {
-        dataset.zipWithIndex
-          .map({ case (basePoint, i) => (i, distance(queryPoint, basePoint)) })
-          .sortBy(_._2)
-          .take(k)
-          .toArray
-      }
-    )
-  )
-  Await.result(kNNFutures, Duration.Inf)
-//  queryData.map(queryPoint =>
-//    dataset.zipWithIndex
-//      .map({ case (basePoint, i) => (i, distance(queryPoint, basePoint)) })
-//      .sortBy(_._2)
-//      .take(k)
-//      .toArray
+//  val kNNFutures = Future.sequence(
+//    queryData.map(queryPoint =>
+//      Future {
+//        dataset.zipWithIndex
+//          .map({ case (basePoint, i) => (i, distance(queryPoint, basePoint)) })
+//          .sortBy(_._2)
+//          .take(k)
+//          .toArray
+//      }
+//    )
 //  )
+//  Await.result(kNNFutures, Duration.Inf)
+  queryData.map(queryPoint =>
+    dataset.zipWithIndex
+      .map({ case (basePoint, i) => (i, distance(queryPoint, basePoint)) })
+      .sortBy(_._2)
+      .take(k)
+      .toArray
+  )
 }

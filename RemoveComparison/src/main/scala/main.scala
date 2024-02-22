@@ -4,11 +4,14 @@ import models.{DiskANN, Tracker, computeGroundTruths, readFvecIntoPoints}
 
 @main
 def main(): Unit = {
+//  val siftSmall = readFvecIntoPoints(
+//    "/home/nawat/muic/senior/data/siftsmall/base.fvecs"
+//  ).take(500)
   val siftSmall = readFvecIntoPoints(
     "/home/nawat/muic/senior/data/siftsmall/base.fvecs"
-  ).take(500)
+  )
   val tracker = new Tracker()
-  val builder = new DiskANN(32, 32, 1.2, tracker, 10_000)
+  val builder = new DiskANN(64, 32, 1.2, tracker, 10_000)
   builder.batchAdd(siftSmall)
   builder.saveIndex(
     "/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall500.index"
@@ -18,7 +21,7 @@ def main(): Unit = {
     "/home/nawat/muic/senior/data/siftsmall/query.fvecs"
   ) // 100 queries
 
-  val kToTest = 100
+  val kToTest = 20
   val index = DiskANN.loadIndex(
     "/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall500.index"
   )
@@ -53,6 +56,8 @@ def main(): Unit = {
         val annsSet = anns.map({ case (i, _) => i }).toSet
         val gtSet   = gt.map({ case (i, _) => i }).toSet
 
+//        println((annsSet intersect gtSet).size)
+//        (annsSet intersect gtSet).size
         (annsSet intersect gtSet).size.toDouble / kToTest.toDouble
       })
   val recall = siftSmallRecalls.sum / siftSmallRecalls.size.toDouble

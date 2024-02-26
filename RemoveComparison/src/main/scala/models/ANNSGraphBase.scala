@@ -3,14 +3,14 @@ package models
 
 type Point = Array[Float]
 
-trait ANNSGraph {
+trait ANNSGraphBase {
   def batchAdd(newPoints: Seq[Point]): Unit
-
-  def remove(index: Int): Unit
-
-  //  def batchRemove(indexes: Array[Int]): Unit
 
   def search(query: Point, k: Int): Array[(Int, Float)]
 
   def saveIndex(path: String): Unit
+}
+
+trait ANNSGraphRemoval extends ANNSGraphBase {
+  def batchRemove(indexes: Seq[Int]): Unit // can be a for loop of removals
 }

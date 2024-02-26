@@ -1,6 +1,6 @@
 package muic.nawat.senior.rmcomp
 
-import models.{DiskANN, Tracker, computeGroundTruths, readFvecIntoPoints}
+import models.{DiskANNBase, Tracker, computeGroundTruths, readFvecIntoPoints}
 
 @main
 def main(): Unit = {
@@ -11,7 +11,7 @@ def main(): Unit = {
     "/home/nawat/muic/senior/data/siftsmall/base.fvecs"
   )
   val tracker = new Tracker()
-  val builder = new DiskANN(64, 32, 1.2, tracker, 10_000)
+  val builder = new DiskANNBase(64, 32, 1.2, tracker, 10_000)
   builder.batchAdd(siftSmall)
   builder.saveIndex(
     "/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall500.index"
@@ -22,7 +22,7 @@ def main(): Unit = {
   ) // 100 queries
 
   val kToTest = 20
-  val index = DiskANN.loadIndex(
+  val index = DiskANNBase.loadIndex(
     "/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall500.index"
   )
   val annsSearchResults = siftSmallQuery.map(index.search(_, kToTest))

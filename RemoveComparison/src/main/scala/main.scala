@@ -1,45 +1,57 @@
 package muic.nawat.senior.rmcomp
 
-import models.{DiskANNBase, Tracker, computeGroundTruths, readFvecIntoPoints}
+import models.{
+  DiskANNBase,
+  DiskANNKnPrune,
+  DiskANNNearestReplace,
+  DiskANNLazyDelete,
+  Tracker,
+  computeGroundTruths,
+  computeRecall,
+  readFvecIntoPoints
+}
 
 @main
 def main(): Unit = {
-//  val siftSmall = readFvecIntoPoints(
-//    "/home/nawat/muic/senior/data/siftsmall/base.fvecs"
-//  ).take(500)
+  val size    = 100
+  val rmRatio = 0.1
+  val remove  = (size * rmRatio).toInt
+  val keep    = size - remove
+  println(s"Size: $size, Remove: $remove, Keep: $keep")
+
+  println("Building index")
+  val indexPath =
+    "/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall100.index"
   val siftSmall = readFvecIntoPoints(
     "/home/nawat/muic/senior/data/siftsmall/base.fvecs"
-  )
+  ).take(size)
   val tracker = new Tracker()
-  val builder = new DiskANNBase(64, 32, 1.2, tracker, 10_000)
+  val builder = new DiskANNBase(16, 8, 1.2, size)
   builder.batchAdd(siftSmall)
-  builder.saveIndex(
-    "/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall500.index"
-  )
+  builder.saveIndex(indexPath)
 
-  val siftSmallQuery = readFvecIntoPoints(
+  val kToTest = 10
+  val queries = readFvecIntoPoints(
     "/home/nawat/muic/senior/data/siftsmall/query.fvecs"
-  ) // 100 queries
-
-  val kToTest = 20
-  val index = DiskANNBase.loadIndex(
-    "/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall500.index"
   )
-  val annsSearchResults = siftSmallQuery.map(index.search(_, kToTest))
 
-  println("Computing ground truth")
-  val siftSmallGT = computeGroundTruths(siftSmall, siftSmallQuery, kToTest)
-  val groundTruthOutput = new java.io.ObjectOutputStream(
+  println("Searching on original index")
+  val nearestReplaceIndex  = DiskANNBase.loadIndex(indexPath)
+  val nearestReplaceResult = queries.map(nearestReplaceIndex.search(_, kToTest))
+
+  println("Computing original ground truth")
+  val gt = computeGroundTruths(siftSmall, queries, kToTest)
+  val gtOut = new java.io.ObjectOutputStream(
     new java.io.FileOutputStream(
-      "/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall500.gt"
+      s"/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall$size.gt"
     )
   )
-  groundTruthOutput.writeObject(siftSmallGT)
-  groundTruthOutput.close()
-//  val siftSmallGT = {
+  gtOut.writeObject(gt)
+  gtOut.close()
+//  val gt = {
 //    val groundTruthInput = new java.io.ObjectInputStream(
 //      new java.io.FileInputStream(
-//        "/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall500.gt"
+//        s"/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall$size.gt"
 //      )
 //    )
 //    val result =
@@ -47,19 +59,35 @@ def main(): Unit = {
 //    groundTruthInput.close()
 //    result
 //  }
+  println("Computing original recall")
+  val originalRecall = computeRecall(gt, nearestReplaceResult)
+  println(s"Original recall@$kToTest: $originalRecall")
 
-  println("Computing recall")
-  val siftSmallRecalls =
-    annsSearchResults
-      .zip(siftSmallGT)
-      .map({ case (anns, gt) =>
-        val annsSet = anns.map({ case (i, _) => i }).toSet
-        val gtSet   = gt.map({ case (i, _) => i }).toSet
+  println("Searching on removed index replacing with NN")
+  val nnReplaceIndex = DiskANNNearestReplace.loadIndex(indexPath)
+  nnReplaceIndex.batchRemove((0 until remove).toVector)
+  val nnReplaceResult = queries.map(nnReplaceIndex.search(_, kToTest))
+  println("Searching on removed index complete then prune")
+  val knPruneIndex = DiskANNKnPrune.loadIndex(indexPath)
+  knPruneIndex.batchRemove((0 until remove).toVector)
+  val knPruneResult = queries.map(knPruneIndex.search(_, kToTest))
+  println("Searching on removed index lazy delete")
+  val lazyIndex = DiskANNLazyDelete.loadIndex(indexPath)
+  lazyIndex.batchRemove((0 until remove).toVector)
+  val lazyResult = queries.map(lazyIndex.search(_, kToTest))
+  println("Removed searches done")
 
-//        println((annsSet intersect gtSet).size)
-//        (annsSet intersect gtSet).size
-        (annsSet intersect gtSet).size.toDouble / kToTest.toDouble
-      })
-  val recall = siftSmallRecalls.sum / siftSmallRecalls.size.toDouble
-  println(s"Recall@$kToTest: $recall")
+  println("Computing removed ground truth")
+  val removedGT =
+    computeGroundTruths(siftSmall.takeRight(keep), queries, kToTest)
+  new java.io.FileOutputStream(
+    s"/home/nawat/muic/senior/swanns/RemoveComparison/builtIndex/siftsmall$size.rgt"
+  )
+  println("Computing removed recall")
+  val nnReplaceRecall = computeRecall(removedGT, nnReplaceResult)
+  println(s"NN Replacement recall@$kToTest: $nnReplaceRecall")
+  val knPruneRecall = computeRecall(removedGT, knPruneResult)
+  println(s"Kn+Prune recall@$kToTest: $knPruneRecall")
+  val lazyRecall = computeRecall(removedGT, lazyResult)
+  println(s"Lazy delete recall@$kToTest: $lazyRecall")
 }

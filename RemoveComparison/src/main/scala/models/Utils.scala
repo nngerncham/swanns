@@ -74,3 +74,18 @@ def computeGroundTruths(
       .toArray
   )
 }
+
+def computeRecall(
+  indexSearchResult: Vector[Array[(Int, Float)]],
+  groundTruth: Vector[Array[(Int, Float)]]
+) = {
+  val recalls = indexSearchResult
+    .zip(groundTruth)
+    .map({ case (index, truth) =>
+      val indexSet     = index.map(_._1).toSet
+      val truthSet     = truth.map(_._1).toSet
+      val intersection = indexSet.intersect(truthSet)
+      intersection.size.toFloat / truthSet.size
+    })
+  recalls.sum.toDouble / recalls.length.toDouble
+}

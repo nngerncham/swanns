@@ -13,7 +13,7 @@ import models.{
 
 @main
 def main(): Unit = {
-  val size    = 100
+  val size    = 10_000
   val rmRatio = 0.1
   val remove  = (size * rmRatio).toInt
   val keep    = size - remove
@@ -25,10 +25,10 @@ def main(): Unit = {
   val siftSmall = readFvecIntoPoints(
     "/home/nawat/muic/senior/data/siftsmall/base.fvecs"
   ).take(size)
-  val tracker = new Tracker()
-  val builder = new DiskANNBase(16, 8, 1.2, size)
-  builder.batchAdd(siftSmall)
-  builder.saveIndex(indexPath)
+//  val tracker = new Tracker()
+//  val builder = new DiskANNBase(64, 32, 1.2, size)
+//  builder.batchAdd(siftSmall)
+//  builder.saveIndex(indexPath)
 
   val kToTest = 10
   val queries = readFvecIntoPoints(
@@ -38,7 +38,6 @@ def main(): Unit = {
   println("Searching on original index")
   val nearestReplaceIndex  = DiskANNBase.loadIndex(indexPath)
   val nearestReplaceResult = queries.map(nearestReplaceIndex.search(_, kToTest))
-
   println("Computing original ground truth")
   val gt = computeGroundTruths(siftSmall, queries, kToTest)
   val gtOut = new java.io.ObjectOutputStream(

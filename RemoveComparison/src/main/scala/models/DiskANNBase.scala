@@ -112,7 +112,7 @@ class DiskANNBase(
       val (pStarIdx, pStarDist) = beam.dequeue()
 
       neighborhoods(pStarIdx).foreach(pPrimeIdx => {
-        if (!visited.contains(pPrimeIdx)) {
+        if (!visited.contains(pPrimeIdx) && !deleted.contains(pPrimeIdx)) {
           beam.enqueue((pPrimeIdx, distance(points(pPrimeIdx), query)))
         }
       })

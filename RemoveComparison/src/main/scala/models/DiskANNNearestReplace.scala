@@ -26,7 +26,7 @@ class DiskANNNearestReplace(
     // combine neighborhood of NN to index's and prune if needed
     var newNN = nearestNeighborhood ++ this.neighborhoods(index) - index
     if (newNN.size > this.degreeBound) {
-      newNN = super.robustPrune(nearestIndex, newNN.toVector)
+      newNN = sequentialRobustPrune(nearestIndex, newNN.toVector)
     }
     this.neighborhoods = this.neighborhoods.updated(nearestIndex, newNN)
 

@@ -19,7 +19,7 @@ class DiskANNLazyDelete(
 }
 
 object DiskANNLazyDelete {
-  def loadIndex(path: String): DiskANNBase = {
+  def loadIndex(path: String): DiskANNLazyDelete = {
     val ois = new java.io.ObjectInputStream(new java.io.FileInputStream(path))
     val baseIndex = ois.readObject().asInstanceOf[DiskANNBase]
     ois.close()
